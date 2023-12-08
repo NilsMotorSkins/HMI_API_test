@@ -43,11 +43,11 @@
             })
             .then(server => {
                 log('Getting Service...');
-                return server.getPrimaryService('your-service-uuid');
+                return server.getPrimaryService('74dae5f0-03a3-4da9-8bcb-a0dfe5026f04');
             })
             .then(service => {
                 log('Getting Characteristic...');
-                return service.getCharacteristic('your-characteristic-uuid');
+                return service.getCharacteristic('c461801a-9454-4cf4-bef5-866e3d0a656c');
             })
             .then(characteristic => {
                 log('Starting Notifications...');
