@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Sensor Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #log {
+            height: 200px;
+            overflow-y: scroll;
+            background-color: #f0f0f0;
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <button id="connect">Connect to ESP32</button>
+    <div id="log"></div>
+
+    <script>
+        const logElement = document.querySelector('#log');
+
+        function log(text) {
+            logElement.textContent += text + '\n';
+        }
+
+        document.querySelector('#connect').addEventListener('click', function() {
+            navigator.bluetooth.requestDevice({
+                filters: [{ services: ['74dae5f0-03a3-4da9-8bcb-a0dfe5026f04'] }]
+            })
+            .then(device => {
+                log('Connecting to GATT Server...');
+                return device.gatt.connect();
+            })
+            .then(server => {
+                log('Getting Service...');
+                return server.getPrimaryService('your-service-uuid');
+            })
+            .then(service => {
+                log('Getting Characteristic...');
+                return service.getCharacteristic('your-characteristic-uuid');
+            })
+            .then(characteristic => {
+                log('Starting Notifications...');
+                return characteristic.startNotifications();
+            })
+            .then(characteristic => {
+                characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    var sensorData = new Uint8Array(event.target.value.buffer);
+                    // Assuming the data is an integer
+                    log('Sensor Data: ' + sensorData[0]);
+                });
+                log('Notifications started');
+            })
+            .catch(error => {
+                log('Argh! ' + error);
+            });
+        });
+    </script>
+</body>
+</html>
