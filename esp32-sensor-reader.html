@@ -3,23 +3,7 @@
 <head>
     <title>ESP32 Sensor Reader</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        #log {
-            height: 200px;
-            overflow-y: scroll;
-            background-color: #f0f0f0;
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-        }
+        /* Existing styles */
     </style>
 </head>
 <body>
@@ -30,39 +14,41 @@
         const logElement = document.querySelector('#log');
 
         function log(text) {
+            console.log(text); // Also log to the browser console
             logElement.textContent += text + '\n';
         }
 
         document.querySelector('#connect').addEventListener('click', function() {
+            log('Requesting Bluetooth Device...');
             navigator.bluetooth.requestDevice({
                 filters: [{ services: ['74dae5f0-03a3-4da9-8bcb-a0dfe5026f04'] }]
             })
             .then(device => {
+                log('Device selected: ' + device.name);
                 log('Connecting to GATT Server...');
                 return device.gatt.connect();
             })
             .then(server => {
-                log('Getting Service...');
+                log('GATT Server connected. Getting Service...');
                 return server.getPrimaryService('74dae5f0-03a3-4da9-8bcb-a0dfe5026f04');
             })
             .then(service => {
-                log('Getting Characteristic...');
+                log('Service found. Getting Characteristic...');
                 return service.getCharacteristic('c461801a-9454-4cf4-bef5-866e3d0a656c');
             })
             .then(characteristic => {
-                log('Starting Notifications...');
+                log('Characteristic found. Starting Notifications...');
                 return characteristic.startNotifications();
             })
             .then(characteristic => {
                 characteristic.addEventListener('characteristicvaluechanged', (event) => {
                     var sensorData = new Uint8Array(event.target.value.buffer);
-                    // Assuming the data is an integer
                     log('Sensor Data: ' + sensorData[0]);
                 });
                 log('Notifications started');
             })
             .catch(error => {
-                log('Argh! ' + error);
+                log('Error: ' + error);
             });
         });
     </script>
