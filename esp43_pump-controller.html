@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Pump Controller</title>
+    <style>
+        /* Existing styles */
+    </style>
+</head>
+<body>
+    <button id="connect">Connect to ESP32</button>
+    <button id="pumpOn">Turn Pump On</button>
+    <button id="pumpOff">Turn Pump Off</button>
+    <div id="log"></div>
+
+    <script>
+        const logElement = document.querySelector('#log');
+        let pumpControlCharacteristic = null;
+
+        function log(text) {
+            console.log(text);
+            logElement.textContent += text + '\n';
+        }
+
+        document.querySelector('#connect').addEventListener('click', function() {
+            log('Requesting Bluetooth Device...');
+            navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: ['74dae5f0-03a3-4da9-8bcb-a0dfe5026f04']
+            })
+            .then(device => {
+                log('Device selected: ' + device.name);
+                log('Connecting to GATT Server...');
+                return device.gatt.connect();
+            })
+            .then(server => {
+                log('GATT Server connected. Getting Service...');
+                return server.getPrimaryService('74dae5f0-03a3-4da9-8bcb-a0dfe5026f04');
+            })
+            .then(service => {
+                log('Service found. Getting Pump Control Characteristic...');
+                return service.getCharacteristic('b4a3a7f6-dc68-4962-9fe7-b3b7311226b5');
+            })
+            .then(characteristic => {
+                log('Pump Control Characteristic found.');
+                pumpControlCharacteristic = characteristic;
+            })
+            .catch(error => {
+                log('Error: ' + error);
+            });
+        });
+
+        document.querySelector('#pumpOn').addEventListener('click', function() {
+            if (pumpControlCharacteristic) {
+                let value = new Uint8Array([1]); // Example value to turn pump on
+                pumpControlCharacteristic.writeValue(value)
+                    .then(_ => {
+                        log('Turned Pump On');
+                    })
+                    .catch(error => {
+                        log('Error: ' + error);
+                    });
+            } else {
+                log('Pump control characteristic not found');
+            }
+        });
+
+        document.querySelector('#pumpOff').addEventListener('click', function() {
+            if (pumpControlCharacteristic) {
+                let value = new Uint8Array([0]); // Example value to turn pump off
+                pumpControlCharacteristic.writeValue(value)
+                    .then(_ => {
+                        log('Turned Pump Off');
+                    })
+                    .catch(error => {
+                        log('Error: ' + error);
+                    });
+            } else {
+                log('Pump control characteristic not found');
+            }
+        });
+    </script>
+</body>
+</html>
